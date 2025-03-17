@@ -163,6 +163,14 @@ function multiWellHistogramController($scope, $timeout, $element, $compile, wiTo
         self.wellSpec = self.wellSpec || [];
         console.log(self.wellSpec)
         self.selectionType = self.selectionType || 'family-group';
+        self.zonationType = self.zonationType || 'zone' // 'zone' | 'interval';
+        self.interval = self.interval ?? (self.wellSpec.length ? {
+            top: Math.min(...self.wellSpec.map(w => w.datasetTop)),
+            bottom: Math.max(...self.wellSpec.map(w => w.datasetBottom)),
+        } : {
+            top: -9999,
+            bottom: 9999,
+        });
         self.zoneTree = [];
         self.zonesetName = self.zonesetName || "ZonationAll";
         self.config = self.config || { family: "", grid: true, displayMode: 'bar', colorMode: 'zone', stackMode: self.stackMode || self.noStack ? 'none' : 'well', binGap: 5, title: self.title || '', notShowCumulative: false };
@@ -172,7 +180,7 @@ function multiWellHistogramController($scope, $timeout, $element, $compile, wiTo
     }
     this.exportStatistic = async function () {
         const perm = await wiApi.checkObjectPermission('project.export').then(res => res && res.value)
-        if(!perm) return __toastr.warning("You don't have permission to export")
+        if (!perm) return __toastr.warning("You don't have permission to export")
         if (!self.histogramList.length) {
             let msg = `No statistic data to export`;
             if (__toastr) __toastr.error(msg);
@@ -245,6 +253,15 @@ function multiWellHistogramController($scope, $timeout, $element, $compile, wiTo
                 getZonesetsFromWells(self.treeConfig);
                 updateDefaultConfig();
             }, true);
+            $scope.$watch(() => self.zonationType, (val) => {
+                self.isSettingChange = true;
+                if (val === 'interval') {
+                    if (self.wellSpec.length && self.interval.top === -9999 && self.interval.bottom === 9999) {
+                        self.interval.top = Math.min(...self.wellSpec.map(w => w.datasetTop));
+                        self.interval.bottom = Math.max(...self.wellSpec.map(w => w.datasetBottom));
+                    }
+                }
+            });
             getTrees(() => {
                 $timeout(() => {
                     self.genHistogramList();
@@ -526,6 +543,7 @@ function multiWellHistogramController($scope, $timeout, $element, $compile, wiTo
             zone._notUsed = !zone._notUsed;
         })
         self.selectedZones = selectedObjs;
+        $scope.$digest();
     }
     this.getZoneTreeMaxHeight = function () {
         return $element.height();
@@ -689,12 +707,24 @@ function multiWellHistogramController($scope, $timeout, $element, $compile, wiTo
     this.setConfigXLabel = function (notUse, newValue) {
         self.config.xLabel = newValue;
     }
+    this.getIntervalTop = () => self.interval.top;
+    this.setIntervalTop = (_, v) => {
+        const n = +v;
+        self.interval.top = isFinite(n) ? n : v;
+        self.isSettingChange = true;
+    }
+    this.getIntervalBottom = () => self.interval.bottom;
+    this.setIntervalBottom = (_, v) => {
+        const n = +v;
+        self.interval.bottom = isFinite(n) ? n : v;
+        self.isSettingChange = true;
+    }
     function clearDefaultConfig() {
         self.defaultConfig = {};
     }
     function updateDefaultConfig() {
         clearDefaultConfig();
-        self.depthUnitList = ['m','ft']
+        self.depthUnitList = ['m', 'ft']
             .map(u => ({
                 data: { label: u },
                 properties: { name: u },
@@ -772,7 +802,15 @@ function multiWellHistogramController($scope, $timeout, $element, $compile, wiTo
                 let dataset = well.datasets.find(ds => ds.idDataset === self.wellSpec[i].idDataset);
 
                 let zoneset = getZoneset(well, self.zonesetName);
-                zoneset = zoneset || genZonationAllZS(datasetTop, datasetBottom, utils.getWellColor(well));
+                // interval
+                const isInterval = self.zonationType === 'interval';
+                let top = datasetTop, bottom = datasetBottom;
+                if (isInterval) {
+                    top = self.interval.top;
+                    bottom = self.interval.bottom;
+                }
+                zoneset = isInterval ? genZonationAllZS(top, bottom, utils.getWellColor(well), 'Interval')
+                    : zoneset || genZonationAllZS(top, bottom, utils.getWellColor(well), isInterval ? 'Interval' : undefined);
 
                 let curveData = await wiApi.getCachedCurveDataPromise(curve.idCurve);
                 if (self.hasDiscriminator(well)) {
@@ -785,8 +823,9 @@ function multiWellHistogramController($scope, $timeout, $element, $compile, wiTo
                         ...d,
                         depth: datasetStep > 0 ? (datasetTop + d.y * datasetStep) : d.y
                     }));
+                const zoneTree = isInterval ? zoneset.zones : self.zoneTree;
                 let zones = zoneset.zones.filter(zone => {
-                    let z = self.zoneTree.find(z1 => {
+                    let z = zoneTree.find(z1 => {
                         return z1.zone_template.name === zone.zone_template.name
                     });
                     return !z._notUsed;
@@ -1049,14 +1088,14 @@ function multiWellHistogramController($scope, $timeout, $element, $compile, wiTo
         }
         return aggregate;
     }
-    function genZonationAllZS(top, bottom, color = 'blue') {
+    function genZonationAllZS(top, bottom, color = 'blue', name = 'ZonationAll') {
         return {
-            name: 'ZonationAll',
+            name,
             zones: [{
                 startDepth: top,
                 endDepth: bottom,
                 zone_template: {
-                    name: 'ZonationAll',
+                    name,
                     background: color
                 }
             }]
@@ -1168,6 +1207,7 @@ function multiWellHistogramController($scope, $timeout, $element, $compile, wiTo
                     zonesetName: self.zonesetName,
                     selectionType: self.selectionType,
                     selectionValue: self.selectionValue,
+                    zonationType: self.zonationType,
                     config: self.config
                 }
                 wiApi.newAssetPromise(self.idProject, name, type, content).then(res => {
@@ -1191,6 +1231,7 @@ function multiWellHistogramController($scope, $timeout, $element, $compile, wiTo
                 zonesetName: self.zonesetName,
                 selectionType: self.selectionType,
                 selectionValue: self.selectionValue,
+                zonationType: self.zonationType,
                 config: self.config
             }
             wiApi.editAssetPromise(self.idHistogram, content).then(res => {
@@ -1218,6 +1259,7 @@ function multiWellHistogramController($scope, $timeout, $element, $compile, wiTo
                 zonesetName: self.zonesetName,
                 selectionType: self.selectionType,
                 selectionValue: self.selectionValue,
+                zonationType: self.zonationType,
                 config: self.config
             }
             wiApi.newAssetPromise(self.idProject, name, type, content).then(res => {
@@ -1377,21 +1419,21 @@ function multiWellHistogramController($scope, $timeout, $element, $compile, wiTo
             layer._notUsed = false;
             toggleCtrlParams(layer, 'layer');
         });
-        $timeout(() => { });
+        $timeout(() => {});
     }
     this.hideAllLayer = function () {
         self.histogramList.forEach(bins => {
             bins._notUsed = true;
             toggleCtrlParams(bins, 'layer');
         });
-        $timeout(() => { });
+        $timeout(() => {});
     }
     this.showAllLayer = function () {
         self.histogramList.forEach(bins => {
             bins._notUsed = false;
             toggleCtrlParams(bins, 'layer');
         });
-        $timeout(() => { });
+        $timeout(() => {});
     }
     this.hideAllCtrlParams = function () {
         $timeout(() => {
@@ -1423,7 +1465,7 @@ function multiWellHistogramController($scope, $timeout, $element, $compile, wiTo
                 self.ctrlParamsMask[ctrlParamIdx] = true;
             }
         });
-        $timeout(() => { });
+        $timeout(() => {});
     }
 
     //--------------
@@ -1438,6 +1480,7 @@ function multiWellHistogramController($scope, $timeout, $element, $compile, wiTo
                 zoneI._notUsed = true;
             })
         });
+        $scope.$digest();
     }
     this.showSelectedZone = function () {
         if (!self.selectedZones) return;
@@ -1449,6 +1492,7 @@ function multiWellHistogramController($scope, $timeout, $element, $compile, wiTo
                 zoneI._notUsed = false;
             })
         });
+        $scope.$digest();
     }
     this.hideAllZone = function () {
         self.zoneTreeUniq.forEach(zone => {
@@ -1456,7 +1500,7 @@ function multiWellHistogramController($scope, $timeout, $element, $compile, wiTo
             zone.$meta.render = !zone.$meta.render;
         });
         self.zoneTree.forEach(zone => zone._notUsed = true);
-        $timeout(() => { });
+        $timeout(() => {});
     }
     this.showAllZone = function () {
         self.isSettingChange = true;
@@ -1465,7 +1509,7 @@ function multiWellHistogramController($scope, $timeout, $element, $compile, wiTo
             zone.$meta.render = !zone.$meta.render;
         });
         self.zoneTree.forEach(zone => zone._notUsed = false);
-        $timeout(() => { });
+        $timeout(() => {});
     }
     this.onDrop = function (event, helper, myData) {
         let idWells = helper.data('idWells');

@@ -11,15 +11,15 @@ multi-histogram {
     ::-webkit-scrollbar-button:horizontal:increment { /* Right */
         background-image: none;
     }
-    
+
     ::-webkit-scrollbar-button:horizontal:decrement { /* Left */
         background-image: none;
     }
-    
+
     ::-webkit-scrollbar-button:vertical:increment { /* Down */
         background-image: none;
     }
-    
+
     ::-webkit-scrollbar-button:vertical:decrement { /* Up */
         background-image: none;
     }
@@ -35,7 +35,7 @@ multi-histogram {
 
     .main {
         display       : flex;
-        height        : 100%;
+        height        : calc(100% - 40px);
         flex-direction: column;
     }
 
@@ -55,7 +55,7 @@ multi-histogram {
         color: #000;
         background: #fff;
         flex-basis: 40px;
-        
+
         .tab-name{
             display: flex;
             align-items: center;
@@ -82,7 +82,7 @@ multi-histogram {
             background: #fff;
             border-bottom: 2px solid #0077be;
         }
-        
+
     }
     .warning {
         display: none;
@@ -97,6 +97,6 @@ multi-histogram {
         border-radius: 2px;
         margin-top: 7px;
     }
-    
+
 
 }
