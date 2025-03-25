@@ -40,33 +40,36 @@
                 line-dash="self.regLine.lineStyle.lineStyle.join(' ')" line-width="self.regLine.lineStyle.lineWidth" show-equation='true'
                 mse="self.mse" ng-if='self.regLine && self.regLine.family' resolution='500'>
             </line-formula-layer>
-            <line-formula-layer min-val='self.getLeft()' max-val="self.getRight()" min-draw='self.getLeft()'
-                max-draw="self.getRight()" min-y="self.getBottom()" min-draw-y="self.getBottom()" max-y="self.getTop()"
-                max-draw-y="self.getTop()" ortho-loga="self.getLogaY()" loga="self.getLogaX()" formula="udl"
-                eqn-offsets="['65px', self.eqnOffsetY(udlIdx)]" line-color="udl.lineStyle.lineColor"
-                line-dash="udl.lineStyle.lineStyle.join(' ')" line-width="udl.lineStyle.lineWidth"
-                ng-repeat="(udlIdx, udl) in self.udls " show-equation='udl.displayEquation' ng-show='!udl._notUsed'
-                resolution='500' ng-if="self.validPlotRegion()">
-            </line-formula-layer>
-            <line-formula-layer min-val='self.getLeft()' max-val="self.getRight()" min-draw='self.getLeft()'
-                max-draw="self.getRight()" min-y="self.getBottom()" max-y="self.getTop()" min-draw-y="self.getBottom()"
-                max-draw-y="self.getTop()" ortho-loga="self.getLogaY()" loga="self.getLogaX()" formula="pickett"
-                show-equation='false' ng-repeat="(pickettIdx, pickett) in self.allPickettLines "
-                ng-if='self.validPlotRegion() && self.conditionForPickettPlot() && self.allPickettLines && !self.notShowPickett' resolution='5000'
-                line-label='pickett.label' line-label-style="pickett.style" ng-show='pickett._used'
-                line-color="self.pickettLineColor(pickett)">
-            </line-formula-layer>
-            <segment-layer min-val='self.getLeft()' max-val="self.getRight()" min-draw='self.getLeft()'
-                max-draw="self.getRight()" min-y="self.getBottom()" max-y="self.getTop()" min-draw-y="self.getBottom()"
-                max-draw-y="self.getTop()" ortho-loga="self.getLogaY()" loga="self.getLogaX()"
-                ng-if='self.validPlotRegion() && self.conditionForPickettPlot() && self.allPickettLines && !self.notShowPickett'
-                ng-repeat="(pickettSetIdx, pickettSet) in self.pickettSets "
-                show-equation='false'
-                points="self.pickettAdjusterArray[pickettSetIdx]"
-                ng-show='pickettSet._used' mode="pickettSet._used ? 'edit' : ''"
-                on-eqn-changed="self.getUpdatePickettParamsFn(pickettSetIdx)"
-                get-point-label="self.noLabel">
-            </segment-layer>
+            <div ng-if="self.validPlotRegion()">
+                <line-formula-layer min-val='self.getLeft()' max-val="self.getRight()" min-draw='self.getLeft()'
+                    max-draw="self.getRight()" min-y="self.getBottom()" min-draw-y="self.getBottom()" max-y="self.getTop()"
+                    max-draw-y="self.getTop()" ortho-loga="self.getLogaY()" loga="self.getLogaX()" formula="udl"
+                    eqn-offsets="['65px', self.eqnOffsetY(udlIdx)]" line-color="udl.lineStyle.lineColor"
+                    line-dash="udl.lineStyle.lineStyle.join(' ')" line-width="udl.lineStyle.lineWidth"
+                    ng-repeat="(udlIdx, udl) in self.udls " show-equation='udl.displayEquation' ng-show='!udl._notUsed'
+                    resolution='500'>
+                </line-formula-layer>
+            </div>
+            <div ng-if='self.validPlotRegion() && self.conditionForPickettPlot() && self.allPickettLines && !self.notShowPickett'>
+                <line-formula-layer min-val='self.getLeft()' max-val="self.getRight()" min-draw='self.getLeft()'
+                    max-draw="self.getRight()" min-y="self.getBottom()" max-y="self.getTop()" min-draw-y="self.getBottom()"
+                    max-draw-y="self.getTop()" ortho-loga="self.getLogaY()" loga="self.getLogaX()" formula="pickett"
+                    show-equation='false' ng-repeat="(pickettIdx, pickett) in self.allPickettLines "
+                    resolution='5000'
+                    line-label='pickett.label' line-label-style="pickett.style" ng-show='pickett._used'
+                    line-color="self.pickettLineColor(pickett)">
+                </line-formula-layer>
+                <segment-layer min-val='self.getLeft()' max-val="self.getRight()" min-draw='self.getLeft()'
+                    max-draw="self.getRight()" min-y="self.getBottom()" max-y="self.getTop()" min-draw-y="self.getBottom()"
+                    max-draw-y="self.getTop()" ortho-loga="self.getLogaY()" loga="self.getLogaX()"
+                    ng-repeat="(pickettSetIdx, pickettSet) in self.pickettSets "
+                    show-equation='false'
+                    points="self.pickettAdjusterArray[pickettSetIdx]"
+                    ng-show='pickettSet._used' mode="pickettSet._used ? 'edit' : ''"
+                    on-eqn-changed="self.getUpdatePickettParamsFn(pickettSetIdx)"
+                    get-point-label="self.noLabel">
+                </segment-layer>
+            </div>
             <polygon-layer ng-show="!polygon._notShow" min-val="self.getLeft()" max-val="self.getRight()"
                 min-y="self.getBottom()" max-y="self.getTop()" ng-repeat="polygon in self.polygons "
                 points="polygon.points" mode="polygon.mode" ortho-loga="self.getLogaY()" loga="self.getLogaX()"
@@ -78,17 +81,19 @@
                 min-draw-y="self.getBottom()" max-y="self.getTop()" max-draw-y="self.getTop()"
                 ortho-loga="self.getLogaY()" loga="self.getLogaX()" overlay-line-spec="self.overlayLineSpec">
             </overlay-line-layer>
-            <polygon-layer ng-if="self.paramGroups && self.paramGroups.length" ng-show="!paramGroup._notShow"
-                ng-repeat="paramGroup in self.paramGroups "
-                min-val="self.getLeft()" max-val="self.getRight()"
-                min-y="self.getBottom()" max-y="self.getTop()"
-                points="self.paramGroupPointsFn(paramGroup, $index)" get-x-fn="self.getParamGroupX" get-y-fn="self.getParamGroupY"
-                set-x-fn="self.setParamGroupX" set-y-fn="self.setParamGroupY"
-                get-point-label="self.getParamGroupPointLabel"
-                params="[$index]"
-                mode="!paramGroup._notShow"
-                show-vertex="true" fill-style="'transparent'">
-            </polygon-layer>
+            <div ng-if="self.paramGroups && self.paramGroups.length">
+                <polygon-layer ng-show="!paramGroup._notShow"
+                    ng-repeat="paramGroup in self.paramGroups "
+                    min-val="self.getLeft()" max-val="self.getRight()"
+                    min-y="self.getBottom()" max-y="self.getTop()"
+                    points="self.paramGroupPointsFn(paramGroup, $index)" get-x-fn="self.getParamGroupX" get-y-fn="self.getParamGroupY"
+                    set-x-fn="self.setParamGroupX" set-y-fn="self.setParamGroupY"
+                    get-point-label="self.getParamGroupPointLabel"
+                    params="[$index]"
+                    mode="!paramGroup._notShow"
+                    show-vertex="true" fill-style="'transparent'">
+                </polygon-layer>
+            </div>
             <tooltip-layer ng-if="self.showTooltip" min-val="self.getLeft()" max-val="self.getRight()"
                 min-y="self.getBottom()" max-y="self.getTop()" loga="self.getLogaX()" ortho-loga="self.getLogaY()"
                 frequency-x-fn="self.getFrequencyX" frequency-y-fn="self.getFrequencyY" test-binding="self.getFrequencyX">

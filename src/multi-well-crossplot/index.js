@@ -172,8 +172,8 @@ function multiWellCrossplotController($scope, $timeout, $element, $compile, wiTo
         self.selectionValueList.forEach(s => {
             setOnChangeFn(s);
         })
-        self.statisticHeaders = ['X-Axis', 'Y-Axis', 'Z1-Axis', 'Z2-Axis', 'Z3-Axis', 'Filter', 'Points', 'MSE', 'Correlation'];
-        self.statisticHeaderMasks = [true, true, self.getSelectionValue('Z1').isUsed, self.getSelectionValue('Z2').isUsed, self.getSelectionValue('Z3').isUsed, true, true, true, true];
+        self.statisticHeaders = ['X-Axis', 'Y-Axis', 'Z1-Axis', 'Z2-Axis', 'Z3-Axis', 'Top', 'Bottom', 'Filter', 'Points', 'MSE', 'Correlation'];
+        self.statisticHeaderMasks = [true, true, self.getSelectionValue('Z1').isUsed, self.getSelectionValue('Z2').isUsed, self.getSelectionValue('Z3').isUsed, true, true, true, true, true, true];
         self.regressionType = self.regressionType || 'Linear';
         // regression type list
         self.regressionTypeList = [{
@@ -377,7 +377,7 @@ function multiWellCrossplotController($scope, $timeout, $element, $compile, wiTo
             getTrees(() => {
                 $timeout(() => {
                     self.genLayers();
-                }, 500);
+                }, 1000);
             });
         }, 700);
 
@@ -423,6 +423,10 @@ function multiWellCrossplotController($scope, $timeout, $element, $compile, wiTo
                     return statsArray[row].curveZ2Info || 'N/A';
                 case 'Z3-Axis':
                     return statsArray[row].curveZ3Info || 'N/A';
+                case 'Top':
+                    return statsArray[row].top || 'N/A';
+                case 'Bottom':
+                    return statsArray[row].bottom || 'N/A';
                 case 'Filter':
                     return statsArray[row].conditionExpr || 'N/A';
                 case 'Points':
@@ -2024,6 +2028,8 @@ function multiWellCrossplotController($scope, $timeout, $element, $compile, wiTo
                             curveZ1Info: shouldPlotZ1 ? `${datasetZ1.name}.${curveZ1.name}` : 'N/A',
                             curveZ2Info: shouldPlotZ2 ? `${datasetZ2.name}.${curveZ2.name}` : 'N/A',
                             curveZ3Info: shouldPlotZ3 ? `${datasetZ3.name}.${curveZ3.name}` : 'N/A',
+                            top: +zone.startDepth.toFixed(4),
+                            bottom: +zone.endDepth.toFixed(4),
                             numPoints: dataArray.length,
                             mse: self.calcMSE(dataArray.map(d => d.x), dataArray.map(d => d.y)).toFixed(3),
                             conditionExpr: self.wellSpec[i].discriminator && self.wellSpec[i].discriminator.active ? self.wellSpec[i].discriminator.conditionExpr : undefined,
@@ -2068,6 +2074,8 @@ function multiWellCrossplotController($scope, $timeout, $element, $compile, wiTo
                         curveZ1Info: shouldPlotZ1 ? `${datasetZ1.name}.${curveZ1.name}` : 'N/A',
                         curveZ2Info: shouldPlotZ2 ? `${datasetZ2.name}.${curveZ2.name}` : 'N/A',
                         curveZ3Info: shouldPlotZ3 ? `${datasetZ3.name}.${curveZ3.name}` : 'N/A',
+                        top: top.toFixed(4),
+                        bottom: bottom.toFixed(4),
                     }
                     for (let j = 0; j < zones.length; j++) {
                         let zone = zones[j];
