@@ -114,12 +114,39 @@
         <p style="position: absolute; font-weight: bold;top: 23px; right: 15px;transform: translateY(-50%);">Percentile (%)</p>
     </div>
     <div class="statistic-table" resizable r-directions="['top']" r-flex="true">
-        <div style="overflow: auto; position: absolute;overflow: auto; position: absolute; top: 0; right: 0; left: 0; bottom: 0;" >
-            <wi-table-view ng-if="self.histogramList.length" row-count="self.getZoneNames().length"
+        <div
+            style="display:inline-flex;gap: .5em;transform:translate(15px, -50%) rotate(90deg);transform-origin: left;"
+        >
+            <span
+                ng-class="{'active' : self.statisticTab === 'layers'}"
+                ng-click="self.statisticTab='layers'"
+                class="button-with-label"
+            >
+                Layers
+            </span>
+            <span
+                ng-class="{'active' : self.statisticTab === 'frequency'}"
+                ng-click="self.statisticTab='frequency'"
+                class="button-with-label"
+            >
+                Frequency
+            </span>
+        </div>
+        <div style="overflow: auto; position: absolute;overflow: auto; position: absolute; top: 0; right: 0; left: 3em; bottom: 0;" >
+            <wi-table-view ng-show="self.statisticTab === 'layers'"
+                ng-if="self.histogramList.length" row-count="self.getZoneNames().length"
                 col-count="self.getHeaders().length" col-headers="self.getHeaders()"
                 get-row-icons="self.getStatsRowIcons" get-row-icon-style="self.getStatsIconStyle"
                 row-headers="self.getZoneNames()" accessor="self.statsValue" valid-row="self.isLayerUsed"
                 item-list="self.histogramList">
+            </wi-table-view>
+            <wi-table-view ng-show="self.statisticTab === 'frequency'"
+                ng-if="self.frequencyTable.length"
+                col-count="self.frequencyTableColHeaders.length" col-headers="self.frequencyTableColHeaders"
+                get-row-icons="self.getStatsRowIcons" get-row-icon-style="self.getFrequencyTableIconStyle"
+                row-count="self.frequencyTable.length" row-headers="self.frequencyTableRowHeaders"
+                accessor="self.getFrequencyTableValue" valid-row="self.frequencyTableValidRow"
+                item-list="self.frequencyTable">
             </wi-table-view>
         </div>
     </div>

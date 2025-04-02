@@ -1,6 +1,6 @@
 {
   "name": "@revotechuet/multi-well-plots",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "main": "./dist/multi-well-plots.js",
   "module": "./dist/multi-well-plots.mjs",
   "exports": {

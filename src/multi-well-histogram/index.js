@@ -61,6 +61,7 @@ function multiWellHistogramController($scope, $timeout, $element, $compile, wiTo
     self.treeConfig = [];
     self.selectedNode = null;
     self.datasets = {};
+    self.statisticTab = 'layers'; // layers | frequency
     self.statisticHeaders = ['X-Axis', 'Filter', 'Top', 'Bottom', 'Points', 'Avg', 'Min', 'Max', 'Avgdev', 'Stddev', 'Var', 'Skew', 'Kurtosis', 'Median', 'P10', 'P50', 'P90'];
     self.statisticHeaderMasks = [true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true];
     //--------------
@@ -773,7 +774,7 @@ function multiWellHistogramController($scope, $timeout, $element, $compile, wiTo
     this.genHistogramList = async function () {
         if (!self.isSettingChange) return;
         self.isSettingChange = false;
-        let preLayers = self.histogramList.map(layer => layer.name);
+        // let preLayers = self.histogramList.map(layer => layer.name);
         //console.log(layer.name)
         this.histogramList.length = 0;
         let allHistogramList = []
@@ -1029,6 +1030,7 @@ function multiWellHistogramController($scope, $timeout, $element, $compile, wiTo
                 flattenHistogramList = flatten;
                 self.setCumulativeData(self.histogramList);
                 self.setGaussianData(self.histogramList);
+                self.genFrequencyTable();
             });
         }
         catch (e) {
@@ -1716,5 +1718,45 @@ function multiWellHistogramController($scope, $timeout, $element, $compile, wiTo
     this.getHistogramMode = getHistogramMode;
     function getHistogramMode() {
         return self.config.histogramMode || 'frequency';
+    }
+
+    this.frequencyTable = [];
+    this.frequencyTableColHeaders = ['Value', 'Point Num.'];
+    this.frequencyTableRowHeaders = [];
+    this.genFrequencyTable = () => {
+        self.frequencyTable = self.histogramList
+            .flatMap((bins) =>
+                bins.flatMap((bin) =>
+                    bin.filter(item => item.length).map((item) => ({
+                        used: !bins._notUsed,
+                        rowHeader: bin.name,
+                        color: bin.color,
+                        value: `${wiApi.bestNumberFormat(item.x0, 3)} - ${wiApi.bestNumberFormat(item.x1, 3)}`,
+                        pointNum: item.length,
+                    })),
+                ),
+            );
+        self.frequencyTableRowHeaders = self.frequencyTable.map(i => i.rowHeader);
+    };
+    this.getFrequencyTableValue = ([row, col]) => {
+        try {
+            const colHeader = self.frequencyTableColHeaders[col];
+            switch (colHeader) {
+                case 'Value':
+                    return self.frequencyTable[row].value;
+                case 'Point Num.':
+                    return self.frequencyTable[row].pointNum;
+                default:
+                    return '';
+            }
+        } catch (error) {
+            return 'N/A';
+        }
+    };
+    this.frequencyTableValidRow = (row) => self.frequencyTable[row].used
+    this.getFrequencyTableIconStyle = function (row) {
+        return {
+            'background-color': self.frequencyTable[row].color
+        }
     }
 }
